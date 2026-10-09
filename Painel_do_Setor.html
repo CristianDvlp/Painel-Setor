@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Painel do Setor</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap">
+<style>
+:root{--bg:#0d1117;--card:#161b22cc;--line:#30363d;--tx:#e6edf3;--mut:#8b949e;--g:#3fb950;--o:#ffa657;--p:#d2a8ff;--b:#79c0ff;--r:#ff7b72;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f6f8fa;--card:#ffffffd9;--line:#d0d7de;--tx:#1f2328;--mut:#656d76;--g:#1a7f37;--o:#bc4c00;--p:#8250df;--b:#0969da;--r:#cf222e}}
+:root[data-theme="dark"]{--bg:#0d1117}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--tx);font-family:'JetBrains Mono',ui-monospace,Consolas,monospace;display:flex;flex-direction:column;padding:1.6vmin;gap:1.4vmin;overflow:hidden}
+@media(max-width:800px){body{height:auto;overflow:auto}}
+#rain{position:fixed;inset:0;width:100%;height:100%;opacity:.25;pointer-events:none;z-index:0}
+header,main,.low,.tick,footer{position:relative;z-index:1}
+header{display:flex;justify-content:space-between;align-items:center;font-size:clamp(14px,1.9vw,28px);color:var(--mut)}
+header b{color:var(--g)}header em{color:var(--p);font-style:normal}
+#clock{color:var(--tx);font-weight:800}
+main{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:1.4vmin;min-height:0}
+@media(max-width:800px){main{grid-template-columns:1fr}}
+.card{background:var(--card);backdrop-filter:blur(6px);border:1px solid var(--line);border-radius:16px;padding:1.8vmin;display:flex;flex-direction:column;gap:1vmin;overflow:hidden;min-height:0}
+.bar{display:flex;gap:6px;align-items:center;color:var(--mut);font-size:clamp(11px,1.3vw,18px)}
+.bar i{width:.9em;height:.9em;border-radius:50%}.bar span{margin-left:auto}
+.cm{color:var(--mut);font-size:clamp(11px,1.4vw,20px)}
+.code{font-size:clamp(13px,1.7vw,24px)}.kw{color:var(--r)}.var{color:var(--b)}
+.big{font-size:clamp(30px,6.2vw,100px);font-weight:800;line-height:1.05;color:var(--g);text-shadow:0 0 30px #3fb95066;word-break:break-word;min-height:1.1em}
+.big::after{content:'▌';animation:bl 1s steps(1) infinite;color:var(--o)}
+.big.c{color:var(--p);text-shadow:0 0 30px #d2a8ff66}
+@keyframes bl{50%{opacity:0}}
+.cd{font-size:clamp(13px,1.8vw,26px);color:var(--o)}
+.week{display:flex;gap:.8vmin}
+.wd{flex:1;text-align:center;border:1px solid var(--line);border-radius:10px;padding:.6vmin;font-size:clamp(11px,1.4vw,19px);color:var(--mut)}
+.wd.done{color:var(--g);border-color:#3fb95066}.wd.done::before{content:'✓ '}
+.wd.cur{background:var(--g);color:var(--bg);font-weight:800;border-color:var(--g);animation:pl 1.6s infinite alternate}
+@keyframes pl{to{box-shadow:0 0 18px var(--g)}}
+.queue{display:flex;flex-direction:column;gap:.5vmin;font-size:clamp(12px,1.6vw,22px);margin-top:auto}
+.queue div{display:flex;align-items:center;gap:1ch;color:var(--mut)}.queue div.on{color:var(--tx);font-weight:700}
+.queue .d{margin-left:auto}
+.av{display:inline-flex;align-items:center;justify-content:center;width:1.7em;height:1.7em;border-radius:50%;font-size:.8em;font-weight:800;color:#fff}
+.btns{display:flex;gap:.8vmin;flex-wrap:wrap}
+button{font:inherit;font-size:clamp(11px,1.3vw,18px);background:transparent;color:var(--tx);border:1px solid var(--line);border-radius:10px;padding:.6vmin 1.2vmin;cursor:pointer}
+button:hover{border-color:var(--g);color:var(--g)}button.w:hover{border-color:var(--r);color:var(--r)}
+.jarwrap{display:flex;gap:2vmin;align-items:center;flex:1;min-height:0}
+.jarwrap svg{height:100%;max-height:30vh;width:auto;flex:0 0 auto}
+.jarwrap circle{animation:bob 3s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-2px)}}
+.segs{display:flex;gap:.6vmin;margin:.8vmin 0}.segs i{flex:1;height:1.4vmin;border-radius:4px;background:var(--line)}.segs i.on{background:var(--p)}
+.segs.low i.on{background:var(--r)}
+.dots{display:flex;gap:.8vmin}
+.dot{flex:1;border:1px solid var(--line);border-radius:10px;padding:.7vmin;font-size:clamp(11px,1.4vw,20px);color:var(--mut);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dot.done{color:var(--g);border-color:var(--g);text-decoration:line-through}
+.dot.cur{color:var(--bg);background:var(--p);border-color:var(--p);font-weight:800}
+.badge{display:inline-block;padding:.3vmin 1.2vmin;border-radius:99px;font-weight:800;font-size:clamp(12px,1.6vw,22px);background:#d2a8ff33;color:var(--p)}
+#alert{display:none;font-weight:800;font-size:clamp(14px,2vw,28px);color:var(--r);animation:bl .8s steps(1) infinite}
+.alarm{border-color:var(--r);animation:glow 1s infinite alternate}.alarm #alert{display:block}
+@keyframes glow{to{box-shadow:0 0 30px #ff7b7288}}
+.low{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.4vmin}
+@media(max-width:800px){.low{grid-template-columns:1fr}}
+.low .card{font-size:clamp(11px,1.35vw,19px);gap:.5vmin;padding:1.3vmin 1.8vmin}
+.ln{display:flex;gap:1ch;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ln s{text-decoration:none;color:var(--o)}.ln u{text-decoration:none;color:var(--mut);margin-left:auto}
+.stat{display:flex;justify-content:space-between}.stat b{color:var(--g)}
+.tick{overflow:hidden;white-space:nowrap;border-block:1px solid var(--line);padding:.6vmin 0;color:var(--b);font-size:clamp(12px,1.5vw,21px)}
+.tick div{display:inline-block;animation:mq 60s linear infinite}
+@keyframes mq{to{transform:translateX(-50%)}}
+footer{background:var(--p);color:#0d1117;border-radius:8px;padding:.5vmin 1.4vmin;font-size:clamp(10px,1.2vw,17px);font-weight:700;display:flex;justify-content:space-between;gap:1ch;flex-wrap:wrap}
+.cf{position:fixed;top:-8vh;font-size:3vmin;z-index:2;animation:fall linear infinite;pointer-events:none}
+@keyframes fall{to{transform:translateY(115vh) rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}#rain,.cf{display:none}}
+dialog{background:var(--bg);color:var(--tx);border:1px solid var(--line);border-radius:16px;font-family:inherit;max-width:560px;width:92%}
+dialog::backdrop{background:#000a}
+label{display:block;margin:10px 0 4px;color:var(--mut);font-size:13px}
+textarea,input{width:100%;font:inherit;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px}
+#ninjaDlg{max-width:1100px;max-height:90vh}
+#ninjaDlg h3{margin:0 0 4px;color:var(--p)}
+.nwrap{overflow-x:auto;margin-top:10px}
+#ninjaTbl{width:100%;border-collapse:collapse;min-width:860px}
+#ninjaTbl th{text-align:left;color:var(--mut);font-size:13px;font-weight:700;padding:6px 4px;border-bottom:1px solid var(--line)}
+#ninjaTbl td{padding:4px}
+#ninjaTbl input,#ninjaTbl select{width:100%;font:inherit;font-size:14px;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:6px}
+#ninjaTbl .st{display:inline-block;padding:6px 12px;border-radius:99px;border:1px solid var(--line);color:var(--mut);font-weight:700;font-size:14px;white-space:nowrap}
+#ninjaTbl .st.s-ok{border-color:var(--g);color:var(--g)}
+#ninjaTbl .st.s-and{border-color:var(--o);color:var(--o)}
+#ninjaTbl .dia{color:var(--p);font-weight:700;padding:0 8px;white-space:nowrap}
+#ninjaTbl tr.hoje .dia{color:var(--g)}
+#ninjaTbl tr.hoje td{background:#3fb95014}
+#ninjaTbl tr.past{opacity:.55}
+#ninjaTbl thead th{position:sticky;top:0;background:var(--bg);z-index:1}
+.nwrap{max-height:62vh;overflow:auto}
+.hbtn{margin:0 1.2vmin;border-color:var(--p);color:var(--p);font-weight:800}
+</style>
+</head>
+<body>
+<canvas id="rain"></canvas>
+<header><div><b>dev@setor</b>:<span style="color:var(--b)">~/painel</span> <em>(main)</em> $ <span style="color:var(--mut)">E editar · F tela cheia</span></div><button id="ninjaBtn" class="hbtn">🥷 Sprint Ninja</button><div id="clock"></div></header>
+<main>
+  <section class="card">
+    <div class="bar"><i style="background:#ff5f56"></i><i style="background:#ffbd2e"></i><i style="background:#27c93f"></i><span>pastel.js</span></div>
+    <div class="cm">// 🥟 sexta-feira do pastel · quem traz?</div>
+    <div class="code"><span class="kw">const</span> <span class="var">vezDoPastel</span> =</div>
+    <div class="big" id="pastel"></div>
+    <div class="cd" id="cd"></div>
+    <div class="cm">// sprint da semana</div>
+    <div class="week" id="week"></div>
+    <div class="queue" id="queue"></div>
+    <div class="btns"><button id="skip" class="w">⏭ pular vez</button><button id="back">⏮ voltar</button></div>
+  </section>
+  <section class="card" id="cc">
+    <div class="bar"><i style="background:#ff5f56"></i><i style="background:#ffbd2e"></i><i style="background:#27c93f"></i><span>balas.ts</span></div>
+    <div class="cm">// 🍬 pote de balas · quem enche?</div>
+    <div class="code"><span class="kw">const</span> <span class="var">proximo</span>: <span class="var">Dev</span> =</div>
+    <div class="jarwrap">
+      <svg viewBox="0 0 100 130" aria-hidden="true"><rect x="30" y="4" width="40" height="12" rx="4" fill="var(--mut)"/><rect x="14" y="16" width="72" height="108" rx="16" fill="none" stroke="var(--mut)" stroke-width="4"/><g id="candies"></g></svg>
+      <div style="min-width:0;flex:1"><div class="big c" id="candy"></div><span class="badge" id="status"></span><div class="segs" id="segs"></div><div id="alert"></div></div>
+    </div>
+    <div class="dots" id="dots"></div>
+    <div class="cm" id="round"></div>
+    <div class="btns"><button id="eat">🍬 pegaram balas (−)</button><button id="empty" class="w">🚨 pote vazio</button><button id="filled">✅ reabasteceu</button></div>
+  </section>
+</main>
+<div class="low">
+  <section class="card"><div class="cm">$ git log --pastel</div><div id="lg1"></div></section>
+  <section class="card"><div class="cm">$ git log --balas</div><div id="lg2"></div></section>
+  <section class="card"><div class="cm">$ ./stats.sh</div><div id="st"></div></section>
+</div>
+<div class="tick"><div id="tk"></div></div>
+<footer><span id="sb1"></span><span id="sb2"></span></footer>
+
+<dialog id="dlg">
+  <b>⚙ configurar</b>
+  <label>Quem traz pastel (um nome por linha, na ordem)</label><textarea id="tp" rows="6"></textarea>
+  <label>Primeira sexta do rodízio (a 1ª pessoa da lista)</label><input type="date" id="sd">
+  <label>Ajuste de pulos (0 = ordem exata da lista; o botão pular/voltar mexe nisso)</label><input type="number" id="of">
+  <label>Quem enche o pote (um nome por linha)</label><textarea id="tc" rows="5"></textarea>
+  <div class="btns" style="margin-top:14px"><button id="save">salvar</button><button id="close">cancelar</button><button id="reset" class="w">zerar tudo</button></div>
+</dialog>
+
+<dialog id="ninjaDlg">
+  <h3>🥷 Sprint Ninja</h3>
+  <div class="cm">// todas as sextas até o fim do ano · salva automaticamente</div>
+  <div class="nwrap"><table id="ninjaTbl"><thead><tr><th>Sexta</th><th>Pessoa 1</th><th>Pessoa 2</th><th>Pessoa 3</th><th>Pessoa 4</th><th>Pessoa 5</th><th>Status</th></tr></thead><tbody id="ninjaBody"></tbody></table></div>
+  <div class="btns" style="margin-top:14px"><button id="ninjaClose">fechar</button><button id="ninjaClear" class="w">limpar tudo</button></div>
+</dialog>
+
+<script>
+const KEY='painel-setor-v2',$=id=>document.getElementById(id),DAY=864e5;
+const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const noon=d=>{const x=new Date(d);x.setHours(12,0,0,0);return x};
+const nextFri=f=>{const d=noon(f);d.setDate(d.getDate()+((5-d.getDay()+7)%7));return d};
+const fmt=d=>d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+const mod=(a,n)=>((a%n)+n)%n;
+const hue=s=>{let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))%360;return h};
+const sha=s=>{let h=5381;for(const c of s)h=((h*33)^c.charCodeAt(0))>>>0;return h.toString(16).padStart(8,'0').slice(0,7)};
+function avatar(n){const s=document.createElement('span');s.className='av';s.style.background='hsl('+hue(n)+' 55% 42%)';s.textContent=n.slice(0,2).toUpperCase();return s}
+function defaults(){return{pastel:['Dev 1','Dev 2','Dev 3','Dev 4','Dev 5'],start:iso(nextFri(new Date())),offset:0,candy:['Dev A','Dev B','Dev C','Dev D'],done:[],round:1,level:4,log:[],ninjaW:{}}}
+let S;try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(!S){try{const o=JSON.parse(localStorage.getItem('painel-setor-v1'));if(o)S={...defaults(),...o,level:o.empty?0:4}}catch(e){}}
+S=S||defaults();
+S.ninjaW=S.ninjaW||{};
+const diasLbl=n=>n<=0?'no mesmo dia':n===1?'1 dia':n+' dias';
+const diasVazio=()=>S.emptyAt?Math.max(0,Math.round((noon(new Date())-noon(new Date(S.emptyAt)))/DAY)):0;
+function setLevel(l){if(l===0&&S.level>0)S.emptyAt=Date.now();if(l>0)S.emptyAt=null;S.level=l}
+if(S.level===0&&!S.emptyAt)S.emptyAt=Date.now();
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const pastelAt=k=>S.pastel[mod(k+S.offset,S.pastel.length)];
+const tw={};
+function type(id,t){const el=$(id);if(tw[id]===t)return;tw[id]=t;let i=0;clearInterval(el._t);el.textContent='';el._t=setInterval(()=>{el.textContent=t.slice(0,++i);if(i>=t.length)clearInterval(el._t)},55)}
+const QUOTES=['// funciona na minha máquina','git push --force (só se for pastel)','while(!pastel){ esperar(); }','// TODO: comer pastel','404: pote de balas not found','Café + pastel + deploy na sexta = coragem','if (sexta) { return 🥟; }','// não commite na sexta... mas traga pastel','sudo sirva pastel','Ctrl+Z não desfaz pastel comido'];
+$('tk').textContent=(QUOTES.join('   ◆   ')+'   ◆   ').repeat(2);
+const LV=['VAZIO','quase vazio','metade','quase cheio','cheio'];
+
+function render(){
+  const now=new Date(),fri=nextFri(now),start=noon(new Date(S.start+'T12:00:00'));
+  const k=Math.round((fri-start)/(7*DAY)),hoje=now.getDay()===5,n=S.pastel.length;
+  type('pastel',n?pastelAt(k):'(vazio)');
+  $('cd').textContent=hoje?'🔥 É HOJE! Bora trazer o pastel!':'⏳ sexta '+fmt(fri)+' · faltam '+Math.ceil((fri-noon(now))/DAY)+' dia(s)';
+  // semana
+  const w=$('week');w.innerHTML='';const dow=now.getDay();
+  ['seg','ter','qua','qui','sex'].forEach((d,i)=>{const e=document.createElement('div');const idx=dow>=1&&dow<=5?dow-1:5;e.className='wd'+(i<idx?' done':i===idx?' cur':'');e.textContent=d==='sex'?'sex 🥟':d;w.append(e)});
+  // fila
+  const q=$('queue');q.innerHTML='';
+  for(let i=0;i<4&&n;i++){const r=document.createElement('div');if(!i)r.className='on';const nm=pastelAt(k+i);const a=document.createElement('span');a.textContent=i?'  ':'▶';const b=document.createElement('span');b.textContent=nm;const d=document.createElement('span');d.className='d';d.textContent=fmt(new Date(fri.getTime()+i*7*DAY));r.append(a,avatar(nm),b,d);q.append(r)}
+  // pote
+  const pend=S.candy.filter(p=>!S.done.includes(p)),cur=pend[0]||S.candy[0]||'(vazio)';
+  type('candy',cur);
+  $('status').textContent='nível: '+LV[S.level];
+  const sg=$('segs');sg.className='segs'+(S.level<=1?' low':'');sg.innerHTML='';for(let i=0;i<4;i++){const e=document.createElement('i');if(i<S.level)e.className='on';sg.append(e)}
+  $('cc').classList.toggle('alarm',S.level===0);
+  $('alert').textContent='🚨 POTE VAZIO! '+cur+' enche! · vazio há '+diasLbl(diasVazio());
+  const ds=$('dots');ds.innerHTML='';
+  S.candy.forEach(p=>{const d=document.createElement('div');d.className='dot'+(S.done.includes(p)?' done':p===cur?' cur':'');d.textContent=p;ds.append(d)});
+  $('round').textContent='// rodada #'+S.round+' · '+S.done.length+'/'+S.candy.length+' já encheram';
+  const g=$('candies');g.innerHTML='';const cols=['#ff7b72','#ffa657','#d2a8ff','#79c0ff','#3fb950','#f778ba'];
+  for(let i=0;i<Math.min(30,S.level*8);i++){const c=document.createElementNS('http://www.w3.org/2000/svg','circle');c.setAttribute('cx',26+(i%6)*10.5+(Math.floor(i/6)%2)*4);c.setAttribute('cy',112-Math.floor(i/6)*12);c.setAttribute('r',5);c.setAttribute('fill',cols[i%6]);c.style.animationDelay=(i*.13)+'s';g.append(c)}
+  // logs
+  const l1=$('lg1');l1.innerHTML='';
+  for(let i=hoje?0:1;i<(hoje?3:4);i++){const d=new Date(fri.getTime()-(hoje?i:i)*7*DAY);if(d<start||!n)continue;const nm=pastelAt(k-i);const e=document.createElement('div');e.className='ln';const h=document.createElement('s');h.textContent=sha(nm+iso(d));const t=document.createElement('span');t.textContent='🥟 '+nm+' trouxe pastel';const u=document.createElement('u');u.textContent=fmt(d);e.append(h,t,u);l1.append(e)}
+  if(!l1.children.length)l1.textContent='(nenhum commit ainda)';
+  const l2=$('lg2');l2.innerHTML='';
+  S.log.slice(-4).reverse().forEach(x=>{const e=document.createElement('div');e.className='ln';const h=document.createElement('s');h.textContent=sha(x.n+x.d);const t=document.createElement('span');t.textContent='🍬 '+x.n+' encheu o pote'+(x.days!=null?' · demorou '+diasLbl(x.days):'');const u=document.createElement('u');u.textContent=x.d;e.append(h,t,u);l2.append(e)});
+  if(!l2.children.length)l2.textContent='(nenhum commit ainda)';
+  const served=Math.max(0,k+(hoje?1:0));
+  $('st').innerHTML='';[['pastéis servidos',served],['pessoas no rodízio',n],['pulos acumulados',(S.offset>0?'+':'')+S.offset],['refils do pote',S.log.length],['média p/ encher',(()=>{const v=S.log.filter(x=>x.days!=null).map(x=>x.days);return v.length?(v.reduce((a,b)=>a+b,0)/v.length).toFixed(1).replace('.',',')+' dias':'—'})()],['rodada do pote','#'+S.round]].forEach(([a,b])=>{const e=document.createElement('div');e.className='stat';const x=document.createElement('span');x.textContent=a;const y=document.createElement('b');y.textContent=b;e.append(x,y);$('st').append(e)});
+  const wk=Math.ceil(((now-new Date(now.getFullYear(),0,1))/DAY+1)/7);
+  $('sb1').textContent='⎇ main · sprint #'+wk+' · 🥟 '+served+' sextas';
+  $('sb2').textContent='🍬 rodada #'+S.round+' · UTF-8 · '+(hoje?'HOJE TEM PASTEL!':'sem pastel hoje :(');
+  confetti(hoje&&now.getHours()<9); // chuva de pastel só até as 09:00
+}
+let cfOn=false;
+function confetti(on){if(on===cfOn)return;cfOn=on;document.querySelectorAll('.cf').forEach(e=>e.remove());if(!on)return;for(let i=0;i<18;i++){const s=document.createElement('span');s.className='cf';s.textContent='🥟';s.style.left=Math.random()*100+'vw';s.style.animationDuration=(6+Math.random()*8)+'s';s.style.animationDelay=(-Math.random()*10)+'s';document.body.append(s)}}
+function tick(){$('clock').textContent=new Date().toLocaleString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'})}
+setInterval(tick,1000);tick();setInterval(render,60000);
+// matrix
+const cv=$('rain'),cx=cv.getContext('2d'),CH='01{}[]<>/;=+*#$%&'.split('');let drops=[];
+function size(){cv.width=innerWidth;cv.height=innerHeight;drops=Array.from({length:Math.ceil(cv.width/18)},()=>Math.random()*cv.height/18)}
+size();addEventListener('resize',size);
+setInterval(()=>{if(document.hidden)return;cx.clearRect(0,0,cv.width,cv.height);cx.font='14px monospace';const c=getComputedStyle(document.documentElement).getPropertyValue('--g').trim()||'#3fb950';cx.fillStyle=c;
+  drops.forEach((y,i)=>{for(let j=0;j<8;j++){cx.globalAlpha=(1-j/8)*.8;cx.fillText(CH[(i*7+j+(y|0))%CH.length],i*18,(y-j)*18)}drops[i]=y>cv.height/18+8?-Math.random()*20:y+.35});cx.globalAlpha=1},80);
+// ações
+$('skip').onclick=()=>{S.offset++;save();render()};
+$('back').onclick=()=>{S.offset--;save();render()};
+$('eat').onclick=()=>{setLevel(Math.max(0,S.level-1));save();render()};
+$('empty').onclick=()=>{setLevel(0);save();render()};
+$('filled').onclick=()=>{const pend=S.candy.filter(p=>!S.done.includes(p)),who=pend[0]||S.candy[0];if(!who)return;S.log.push({n:who,d:fmt(new Date()),days:S.level===0&&S.emptyAt?diasVazio():null});S.log=S.log.slice(-30);S.done.push(who);setLevel(4);if(S.done.length>=S.candy.length){S.done=[];S.round++}save();render()};
+const dlg=$('dlg');
+document.addEventListener('keydown',e=>{if(dlg.open||$('ninjaDlg').open||['TEXTAREA','INPUT','SELECT'].includes(e.target.tagName))return;const k=e.key.toLowerCase();
+  if(k==='e'){$('tp').value=S.pastel.join('\n');$('tc').value=S.candy.join('\n');$('sd').value=S.start;$('of').value=S.offset;dlg.showModal()}
+  if(k==='f'){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()}});
+$('close').onclick=()=>dlg.close();
+$('save').onclick=()=>{const l=v=>v.split('\n').map(s=>s.trim()).filter(Boolean),p=l($('tp').value),c=l($('tc').value);if(p.length)S.pastel=p;if(c.length){S.candy=c;S.done=S.done.filter(x=>c.includes(x))}if($('sd').value)S.start=$('sd').value;S.offset=parseInt($('of').value)||0;save();render();dlg.close()};
+$('reset').onclick=()=>{if(confirm('Zerar tudo?')){S=defaults();save();render();dlg.close()}};
+// sprint ninja
+function ninjaFridays(){
+  const out=[],f=nextFri(new Date()),y=f.getFullYear();
+  for(let d=new Date(f);d.getFullYear()===y;d.setDate(d.getDate()+7))out.push(new Date(d));
+  return out
+}
+function statusDe(d){
+  const n=new Date(),hj=iso(n),k=iso(d);
+  if(k<hj)return['Concluído','s-ok'];
+  if(k>hj)return['A fazer',''];
+  const m=n.getHours()*60+n.getMinutes();
+  if(m>=18*60)return['Concluído','s-ok'];
+  if(m>=13*60+30)return['Em andamento','s-and'];
+  return['A fazer','']
+}
+function ninjaPaint(){
+  document.querySelectorAll('#ninjaBody tr').forEach(tr=>{
+    const[t,c]=statusDe(new Date(tr.dataset.d+'T12:00:00')),e=tr.querySelector('.st');
+    e.textContent=t;e.className='st '+c
+  })
+}
+function ninjaDraw(){
+  const tb=$('ninjaBody');tb.innerHTML='';
+  ninjaFridays().forEach(d=>{
+    const k=iso(d),tr=document.createElement('tr');tr.dataset.d=k;
+    if(k===iso(new Date()))tr.className='hoje';
+    const t0=document.createElement('td');t0.innerHTML='<span class="dia"></span>';
+    t0.firstChild.textContent=fmt(d)+(k===iso(new Date())?' · hoje':'');tr.append(t0);
+    const row=S.ninjaW[k]||['','','','',''];
+    for(let c=0;c<5;c++){
+      const td=document.createElement('td'),i=document.createElement('input');
+      i.value=row[c]||'';i.placeholder='—';
+      i.oninput=()=>{const a=S.ninjaW[k]||(S.ninjaW[k]=['','','','','']);a[c]=i.value;if(a.every(x=>!x.trim()))delete S.ninjaW[k];save()};
+      td.append(i);tr.append(td)
+    }
+    const ts=document.createElement('td');ts.innerHTML='<span class="st"></span>';tr.append(ts);
+    tb.append(tr)
+  });
+  ninjaPaint()
+}
+setInterval(()=>{if($('ninjaDlg').open)ninjaPaint()},30000);
+$('ninjaBtn').onclick=()=>{ninjaDraw();$('ninjaDlg').showModal()};
+$('ninjaClose').onclick=()=>$('ninjaDlg').close();
+$('ninjaClear').onclick=()=>{if(confirm('Limpar todos os nomes do Sprint Ninja?')){S.ninjaW={};save();ninjaDraw()}};
+render();
+</script>
+</body>
+</html>
