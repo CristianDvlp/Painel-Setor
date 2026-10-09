@@ -90,6 +90,7 @@ textarea,input{width:100%;font:inherit;background:var(--card);color:var(--tx);bo
 #ninjaTbl thead th{position:sticky;top:0;background:var(--bg);z-index:1}
 .nwrap{max-height:62vh;overflow:auto}
 .hbtn{margin:0 1.2vmin;border-color:var(--p);color:var(--p);font-weight:800}
+#editCandy{border-color:var(--p);color:var(--p);font-weight:800}
 </style>
 </head>
 <body>
@@ -102,7 +103,7 @@ textarea,input{width:100%;font:inherit;background:var(--card);color:var(--tx);bo
     <div class="code"><span class="kw">const</span> <span class="var">vezDoPastel</span> =</div>
     <div class="big" id="pastel"></div>
     <div class="cd" id="cd"></div>
-    <div class="cm">// sprint da semana</div>
+    <div class="cm">// Pasteis da semana</div>
     <div class="week" id="week"></div>
     <div class="queue" id="queue"></div>
     <div class="btns" style="display:none"><button id="skip" class="w">⏭ pular vez</button><button id="back">⏮ voltar</button></div>
@@ -117,7 +118,14 @@ textarea,input{width:100%;font:inherit;background:var(--card);color:var(--tx);bo
     </div>
     <div class="dots" id="dots"></div>
     <div class="cm" id="round"></div>
-    <div class="btns" style="display:none"><button id="eat">🍬 pegaram balas (−)</button><button id="empty" class="w">🚨 pote vazio</button><button id="filled">✅ reabasteceu</button></div>
+    <div class="btns">
+      <button id="editCandy">✏️ editar</button>
+      <div class="btns" id="candyBtns" style="display:none">
+        <button id="eat">🍬 pegaram balas (−)</button>
+        <button id="empty" class="w">🚨 pote vazio</button>
+        <button id="filled">✅ reabasteceu</button>
+      </div>
+    </div>
   </section>
 </main>
 <div class="low">
@@ -229,6 +237,13 @@ $('back').onclick=()=>{S.offset--;save();render()};
 $('eat').onclick=()=>{setLevel(Math.max(0,S.level-1));save();render()};
 $('empty').onclick=()=>{setLevel(0);save();render()};
 $('filled').onclick=()=>{const pend=S.candy.filter(p=>!S.done.includes(p)),who=pend[0]||S.candy[0];if(!who)return;S.log.push({n:who,d:fmt(new Date()),days:S.level===0&&S.emptyAt?diasVazio():null});S.log=S.log.slice(-30);S.done.push(who);setLevel(4);if(S.done.length>=S.candy.length){S.done=[];S.round++}save();render()};
+// botão editar do pote de balas
+const candyBtns=$('candyBtns'),editCandy=$('editCandy');
+editCandy.onclick=()=>{
+  const abrir=candyBtns.style.display==='none';
+  candyBtns.style.display=abrir?'flex':'none';
+  editCandy.textContent=abrir?'✏️ fechar':'✏️ editar';
+};
 const dlg=$('dlg');
 document.addEventListener('keydown',e=>{if(dlg.open||$('ninjaDlg').open||['TEXTAREA','INPUT','SELECT'].includes(e.target.tagName))return;const k=e.key.toLowerCase();
   if(k==='f'){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()}});
