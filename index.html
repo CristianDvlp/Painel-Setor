@@ -10,17 +10,17 @@
 @media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f6f8fa;--card:#ffffffd9;--line:#d0d7de;--tx:#1f2328;--mut:#656d76;--g:#1a7f37;--o:#bc4c00;--p:#8250df;--b:#0969da;--r:#cf222e}}
 :root[data-theme="dark"]{--bg:#0d1117}
 *{box-sizing:border-box}
-html,body{height:100%;margin:0}
-body{background:var(--bg);color:var(--tx);font-family:'JetBrains Mono',ui-monospace,Consolas,monospace;display:flex;flex-direction:column;padding:1.6vmin;gap:1.4vmin;overflow:hidden}
-@media(max-width:800px){body{height:auto;overflow:auto}}
+html{height:100%}
+html,body{margin:0}
+body{background:var(--bg);color:var(--tx);font-family:'JetBrains Mono',ui-monospace,Consolas,monospace;display:flex;flex-direction:column;padding:1.6vmin;gap:1.4vmin;min-height:100%;overflow-x:hidden;overflow-y:auto}
 #rain{position:fixed;inset:0;width:100%;height:100%;opacity:.25;pointer-events:none;z-index:0}
 header,main,.low,.tick,footer{position:relative;z-index:1}
 header{display:flex;justify-content:space-between;align-items:center;font-size:clamp(14px,1.9vw,28px);color:var(--mut)}
 header b{color:var(--g)}header em{color:var(--p);font-style:normal}
 #clock{color:var(--tx);font-weight:800}
-main{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:1.4vmin;min-height:0}
+main{flex:1 0 auto;display:grid;grid-template-columns:1fr 1fr;gap:1.4vmin}
 @media(max-width:800px){main{grid-template-columns:1fr}}
-.card{background:var(--card);backdrop-filter:blur(6px);border:1px solid var(--line);border-radius:16px;padding:1.8vmin;display:flex;flex-direction:column;gap:1vmin;overflow:hidden;min-height:0}
+.card{background:var(--card);backdrop-filter:blur(6px);border:1px solid var(--line);border-radius:16px;padding:1.8vmin;display:flex;flex-direction:column;gap:1vmin;overflow:hidden}
 .bar{display:flex;gap:6px;align-items:center;color:var(--mut);font-size:clamp(11px,1.3vw,18px)}
 .bar i{width:.9em;height:.9em;border-radius:50%}.bar span{margin-left:auto}
 .cm{color:var(--mut);font-size:clamp(11px,1.4vw,20px)}
@@ -42,8 +42,8 @@ main{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:1.4vmin;min-height:0}
 .btns{display:flex;gap:.8vmin;flex-wrap:wrap}
 button{font:inherit;font-size:clamp(11px,1.3vw,18px);background:transparent;color:var(--tx);border:1px solid var(--line);border-radius:10px;padding:.6vmin 1.2vmin;cursor:pointer}
 button:hover{border-color:var(--g);color:var(--g)}button.w:hover{border-color:var(--r);color:var(--r)}
-.jarwrap{display:flex;gap:2vmin;align-items:center;flex:1;min-height:0}
-.jarwrap svg{height:100%;max-height:30vh;width:auto;flex:0 0 auto}
+.jarwrap{display:flex;gap:2vmin;align-items:center;flex:1}
+.jarwrap svg{height:clamp(120px,26vh,260px);width:auto;flex:0 0 auto}
 .jarwrap circle{animation:bob 3s ease-in-out infinite}
 @keyframes bob{50%{transform:translateY(-2px)}}
 .segs{display:flex;gap:.6vmin;margin:.8vmin 0}.segs i{flex:1;height:1.4vmin;border-radius:4px;background:var(--line)}.segs i.on{background:var(--p)}
@@ -73,7 +73,8 @@ dialog::backdrop{background:#000a}
 label{display:block;margin:10px 0 4px;color:var(--mut);font-size:13px}
 textarea,input{width:100%;font:inherit;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px}
 #ninjaDlg{max-width:1100px;max-height:90vh}
-#ninjaDlg h3{margin:0 0 4px;color:var(--p)}
+#ninjaDlg .xbtn{position:absolute;top:10px;right:12px;font-size:20px;line-height:1;padding:4px 10px;z-index:2}
+#ninjaDlg h3{padding-right:48px;margin:0 0 4px;color:var(--p)}
 .nwrap{overflow-x:auto;margin-top:10px}
 #ninjaTbl{width:100%;border-collapse:collapse;min-width:860px}
 #ninjaTbl th{text-align:left;color:var(--mut);font-size:13px;font-weight:700;padding:6px 4px;border-bottom:1px solid var(--line)}
@@ -104,7 +105,7 @@ textarea,input{width:100%;font:inherit;background:var(--card);color:var(--tx);bo
     <div class="cm">// sprint da semana</div>
     <div class="week" id="week"></div>
     <div class="queue" id="queue"></div>
-    <div class="btns"><button id="skip" class="w">⏭ pular vez</button><button id="back">⏮ voltar</button></div>
+    <div class="btns" style="display:none"><button id="skip" class="w">⏭ pular vez</button><button id="back">⏮ voltar</button></div>
   </section>
   <section class="card" id="cc">
     <div class="bar"><i style="background:#ff5f56"></i><i style="background:#ffbd2e"></i><i style="background:#27c93f"></i><span>balas.ts</span></div>
@@ -122,7 +123,7 @@ textarea,input{width:100%;font:inherit;background:var(--card);color:var(--tx);bo
 <div class="low">
   <section class="card"><div class="cm">$ git log --pastel</div><div id="lg1"></div></section>
   <section class="card"><div class="cm">$ git log --balas</div><div id="lg2"></div></section>
-  <section class="card"><div class="cm">$ ./stats.sh</div><div id="st"></div></section>
+  <section class="card"><div class="cm" id="njt">$ ./sprint-ninja.sh</div><div id="st"></div></section>
 </div>
 <div class="tick"><div id="tk"></div></div>
 <footer><span id="sb1"></span><span id="sb2"></span></footer>
@@ -137,10 +138,11 @@ textarea,input{width:100%;font:inherit;background:var(--card);color:var(--tx);bo
 </dialog>
 
 <dialog id="ninjaDlg">
+  <button id="ninjaClose" class="xbtn" aria-label="fechar" title="fechar">✕</button>
   <h3>🥷 Sprint Ninja</h3>
   <div class="cm">// todas as sextas até o fim do ano · somente leitura</div>
   <div class="nwrap"><table id="ninjaTbl"><thead><tr><th>Sexta</th><th>Pessoa 1</th><th>Pessoa 2</th><th>Pessoa 3</th><th>Pessoa 4</th><th>Pessoa 5</th><th>Status</th></tr></thead><tbody id="ninjaBody"></tbody></table></div>
-  <div class="btns" style="margin-top:14px"><button id="ninjaClose">fechar</button><button id="ninjaClear" class="w" style="display:none">limpar tudo</button></div>
+  <button id="ninjaClear" class="w" style="display:none">limpar tudo</button>
 </dialog>
 
 <script>
@@ -201,10 +203,14 @@ function render(){
   S.log.slice(-4).reverse().forEach(x=>{const e=document.createElement('div');e.className='ln';const h=document.createElement('s');h.textContent=sha(x.n+x.d);const t=document.createElement('span');t.textContent='🍬 '+x.n+' encheu o pote'+(x.days!=null?' · demorou '+diasLbl(x.days):'');const u=document.createElement('u');u.textContent=x.d;e.append(h,t,u);l2.append(e)});
   if(!l2.children.length)l2.textContent='(nenhum commit ainda)';
   const served=Math.max(0,k+(hoje?1:0));
-  $('st').innerHTML='';[['pastéis servidos',served],['pessoas no rodízio',n],['pulos acumulados',(S.offset>0?'+':'')+S.offset],['refils do pote',S.log.length],['média p/ encher',(()=>{const v=S.log.filter(x=>x.days!=null).map(x=>x.days);return v.length?(v.reduce((a,b)=>a+b,0)/v.length).toFixed(1).replace('.',',')+' dias':'—'})()],['rodada do pote','#'+S.round]].forEach(([a,b])=>{const e=document.createElement('div');e.className='stat';const x=document.createElement('span');x.textContent=a;const y=document.createElement('b');y.textContent=b;e.append(x,y);$('st').append(e)});
+  {const nk=iso(fri),nm=(S.ninjaW[nk]||[]).map(x=>x.trim()).filter(Boolean),box=$('st');
+    $('njt').textContent=hoje?'$ ./sprint-ninja.sh --hoje':'$ ./sprint-ninja.sh --sexta '+fmt(fri);
+    box.innerHTML='';
+    nm.forEach(x=>{const e=document.createElement('div');e.className='ln';e.style.alignItems='center';const t=document.createElement('span');t.textContent=x;e.append(avatar(x),t);box.append(e)});
+    if(!nm.length)box.textContent='(ninjas ainda não definidos)'}
   const wk=Math.ceil(((now-new Date(now.getFullYear(),0,1))/DAY+1)/7);
   $('sb1').textContent='⎇ main · sprint #'+wk+' · 🥟 '+served+' sextas';
-  $('sb2').textContent='🍬 rodada #'+S.round+' · UTF-8 · '+(hoje?'HOJE TEM PASTEL!':'sem pastel hoje :(');
+  $('sb2').textContent='🍬 rodada #'+S.round+' · UTF-8 · '+(hoje?(now.getHours()<9?'HOJE TEM PASTEL!':'HOJE TEVE PASTEL!'):'sem pastel hoje :(');
   confetti(hoje&&now.getHours()<9); // chuva de pastel só até as 09:00
 }
 let cfOn=false;
