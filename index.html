@@ -38,7 +38,7 @@ main{flex:1 0 auto;display:grid;grid-template-columns:1fr 1fr;gap:1.4vmin}
 .queue{display:flex;flex-direction:column;gap:.5vmin;font-size:clamp(12px,1.6vw,22px);margin-top:auto}
 .queue div{display:flex;align-items:center;gap:1ch;color:var(--mut)}.queue div.on{color:var(--tx);font-weight:700}
 .queue .d{margin-left:auto}
-.av{display:inline-flex;align-items:center;justify-content:center;width:1.7em;height:1.7em;border-radius:50%;font-size:.8em;font-weight:800;color:#fff}
+.av{display:inline-flex;align-items:center;justify-content:center;width:1.7em;height:1.7em;border-radius:50%;font-size:.8em;font-weight:800;color:#fff;flex:0 0 auto}
 .btns{display:flex;gap:.8vmin;flex-wrap:wrap}
 button{font:inherit;font-size:clamp(11px,1.3vw,18px);background:transparent;color:var(--tx);border:1px solid var(--line);border-radius:10px;padding:.6vmin 1.2vmin;cursor:pointer}
 button:hover{border-color:var(--g);color:var(--g)}button.w:hover{border-color:var(--r);color:var(--r)}
@@ -46,6 +46,9 @@ button:hover{border-color:var(--g);color:var(--g)}button.w:hover{border-color:va
 .jarwrap svg{height:clamp(120px,26vh,260px);width:auto;flex:0 0 auto}
 .jarwrap circle{animation:bob 3s ease-in-out infinite}
 @keyframes bob{50%{transform:translateY(-2px)}}
+.when{color:var(--mut);font-size:clamp(12px,1.5vw,21px);margin:.4vmin 0 .8vmin}
+.next{display:flex;align-items:center;gap:1ch;flex-wrap:wrap;font-size:clamp(13px,1.7vw,24px);border:1px dashed var(--p);border-radius:12px;padding:.9vmin 1.4vmin}
+.next .lb{color:var(--mut)}.next b{color:var(--p)}.next .hint{color:var(--mut);font-size:.75em;margin-left:auto}
 .segs{display:flex;gap:.6vmin;margin:.8vmin 0}.segs i{flex:1;height:1.4vmin;border-radius:4px;background:var(--line)}.segs i.on{background:var(--p)}
 .segs.low i.on{background:var(--r)}
 .dots{display:flex;gap:.8vmin}
@@ -110,12 +113,14 @@ textarea,input{width:100%;font:inherit;background:var(--card);color:var(--tx);bo
   </section>
   <section class="card" id="cc">
     <div class="bar"><i style="background:#ff5f56"></i><i style="background:#ffbd2e"></i><i style="background:#27c93f"></i><span>balas.ts</span></div>
-    <div class="cm">// 🍬 pote de balas · quem enche?</div>
-    <div class="code"><span class="kw">const</span> <span class="var">Atual</span>: <span class="var">Dev</span> =</div>
+    <div class="cm">// 🍬 pote de balas · as balas que estão no pote foram trazidas por:</div>
+    <div class="code"><span class="kw">const</span> <span class="var">ultimoAbastecimento</span>: <span class="var">Dev</span> =</div>
     <div class="jarwrap">
       <svg viewBox="0 0 100 130" aria-hidden="true"><rect x="30" y="4" width="40" height="12" rx="4" fill="var(--mut)"/><rect x="14" y="16" width="72" height="108" rx="16" fill="none" stroke="var(--mut)" stroke-width="4"/><g id="candies"></g></svg>
-      <div style="min-width:0;flex:1"><div class="big c" id="candy"></div><span class="badge" id="status"></span><div class="segs" id="segs"></div><div id="alert"></div></div>
+      <div style="min-width:0;flex:1"><div class="big c" id="candy"></div><div class="when" id="lastWhen"></div><span class="badge" id="status"></span><div class="segs" id="segs"></div><div id="alert"></div></div>
     </div>
+    <div class="next" id="next"></div>
+    <div class="cm">// fila do pote (riscado = já abasteceu nesta rodada)</div>
     <div class="dots" id="dots"></div>
     <div class="cm" id="round"></div>
     <div class="btns">
@@ -164,21 +169,37 @@ const hue=s=>{let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))%360;return h};
 const sha=s=>{let h=5381;for(const c of s)h=((h*33)^c.charCodeAt(0))>>>0;return h.toString(16).padStart(8,'0').slice(0,7)};
 function avatar(n){const s=document.createElement('span');s.className='av';s.style.background='hsl('+hue(n)+' 55% 42%)';s.textContent=n.slice(0,2).toUpperCase();return s}
 function defaults(){return{pastel:['Dev 1','Dev 2','Dev 3','Dev 4','Dev 5'],start:iso(nextFri(new Date())),offset:0,candy:['Dev A','Dev B','Dev C','Dev D'],done:[],round:1,level:4,log:[],ninjaW:{}}}
-// VERSÃO SOMENTE LEITURA: os dados abaixo são fixos. Para atualizar, edite este bloco.
-const CONFIG={"pastel":["Bruno","Cristian","Kelvin","Diogo","Roberto","Leonor","Dayan","Sandro","Miguel"],"start":"2026-10-09","offset":0,"candy":["Bruno","Cristian","Kelvin","Roberto"],"done":[],"round":1,"level":1,"log":[],"ninja":["Diogo","Roberto","Leonor","Sandro","Bruno"],"ninjaTitle":"Sexta - 09/10/2026","ninjaW":{"2026-10-09":["Leonor","Diogo","Kelvin","Miguel","Bruno"],"2026-10-16":["Kelvin","Dayan","Roberto","Sandro","Bruno"],"2026-10-23":["Leonor","Dayan","Roberto","Sandro","Miguel"],"2026-10-30":["Leonor","Diogo","Kelvin","Bruno","Miguel"]}};
+// CONFIGURAÇÃO FIXA: nomes, rodízios e Sprint Ninja. Para mudar, edite este bloco.
+// "ultimo" = quem abasteceu o pote antes de começar a usar o painel (opcional, ex.: {"n":"Roberto","d":"20/10"}).
+// O estado do pote (nível, quem já encheu, histórico) fica salvo no navegador (localStorage).
+const CONFIG={"pastel":["Bruno","Cristian","Kelvin","Diogo","Roberto","Leonor","Dayan","Sandro","Miguel"],"start":"2026-10-09","offset":0,"candy":["Bruno","Cristian","Kelvin","Roberto"],"done":[],"round":1,"level":1,"log":[],"ultimo":null,"ninja":["Diogo","Roberto","Leonor","Sandro","Bruno"],"ninjaTitle":"Sexta - 09/10/2026","ninjaW":{"2026-10-09":["Leonor","Diogo","Kelvin","Miguel","Bruno"],"2026-10-16":["Kelvin","Dayan","Roberto","Sandro","Bruno"],"2026-10-23":["Leonor","Dayan","Roberto","Sandro","Miguel"],"2026-10-30":["Leonor","Diogo","Kelvin","Bruno","Miguel"]}};
 let S=JSON.parse(JSON.stringify(CONFIG));
 S.ninjaW=S.ninjaW||{};
+// ---- localStorage: só o estado que muda pelos botões é salvo ----
+const SAVED=['done','round','level','log','emptyAt','offset'];
+try{
+  const sv=JSON.parse(localStorage.getItem(KEY)||'null');
+  if(sv&&typeof sv==='object'){
+    SAVED.forEach(k=>{if(sv[k]!==undefined)S[k]=sv[k]});
+    if(!Array.isArray(S.done))S.done=[];
+    if(!Array.isArray(S.log))S.log=[];
+    S.done=S.done.filter(x=>S.candy.includes(x));
+  }
+}catch(e){}
+const save=()=>{try{const o={};SAVED.forEach(k=>o[k]=S[k]);localStorage.setItem(KEY,JSON.stringify(o))}catch(e){}};
 const diasLbl=n=>n<=0?'no mesmo dia':n===1?'1 dia':n+' dias';
 const diasVazio=()=>S.emptyAt?Math.max(0,Math.round((noon(new Date())-noon(new Date(S.emptyAt)))/DAY)):0;
 function setLevel(l){if(l===0&&S.level>0)S.emptyAt=Date.now();if(l>0)S.emptyAt=null;S.level=l}
-if(S.level===0&&!S.emptyAt)S.emptyAt=Date.now();
-const save=()=>{};
+if(S.level===0&&!S.emptyAt){S.emptyAt=Date.now();save()}
 const pastelAt=k=>S.pastel[mod(k+S.offset,S.pastel.length)];
 const tw={};
 function type(id,t){const el=$(id);if(tw[id]===t)return;tw[id]=t;let i=0;clearInterval(el._t);el.textContent='';el._t=setInterval(()=>{el.textContent=t.slice(0,++i);if(i>=t.length)clearInterval(el._t)},55)}
 const QUOTES=['// funciona na minha máquina','git push --force (só se for pastel)','while(!pastel){ esperar(); }','// TODO: comer pastel','404: pote de balas not found','Café + pastel + deploy na sexta = coragem','if (sexta) { return 🥟; }','// não commite na sexta... mas traga pastel','sudo sirva pastel','Ctrl+Z não desfaz pastel comido'];
 $('tk').textContent=(QUOTES.join('   ◆   ')+'   ◆   ').repeat(2);
 const LV=['VAZIO','quase vazio','metade','quase cheio','cheio'];
+// quem abasteceu por último: histórico do painel, senão o "ultimo" do CONFIG
+const ultimo=()=>S.log.length?S.log[S.log.length-1]:(S.ultimo&&S.ultimo.n?S.ultimo:null);
+const proximo=()=>{const pend=S.candy.filter(p=>!S.done.includes(p));return pend[0]||S.candy[0]||null};
 
 function render(){
   const now=new Date(),fri=nextFri(now),start=noon(new Date(S.start+'T12:00:00'));
@@ -192,15 +213,21 @@ function render(){
   const q=$('queue');q.innerHTML='';
   for(let i=0;i<4&&n;i++){const r=document.createElement('div');if(!i)r.className='on';const nm=pastelAt(k+i);const a=document.createElement('span');a.textContent=i?'  ':'▶';const b=document.createElement('span');b.textContent=nm;const d=document.createElement('span');d.className='d';d.textContent=fmt(new Date(fri.getTime()+i*7*DAY));r.append(a,avatar(nm),b,d);q.append(r)}
   // pote
-  const pend=S.candy.filter(p=>!S.done.includes(p)),cur=pend[0]||S.candy[0]||'(vazio)';
-  type('candy',cur);
+  const ult=ultimo(),prox=proximo();
+  type('candy',ult?ult.n:'(ninguém ainda)');
+  $('lastWhen').textContent=ult?'🗓 abasteceu em '+ult.d+(ult.days!=null?' · pote ficou vazio por '+diasLbl(ult.days):''):'// nenhum abastecimento registrado ainda';
   $('status').textContent='nível: '+LV[S.level];
   const sg=$('segs');sg.className='segs'+(S.level<=1?' low':'');sg.innerHTML='';for(let i=0;i<4;i++){const e=document.createElement('i');if(i<S.level)e.className='on';sg.append(e)}
   $('cc').classList.toggle('alarm',S.level===0);
-  $('alert').textContent='🚨 POTE VAZIO! '+cur+' enche! · vazio há '+diasLbl(diasVazio());
+  $('alert').textContent='🚨 POTE VAZIO! Vez de '+(prox||'?')+' encher · vazio há '+diasLbl(diasVazio());
+  const nx=$('next');nx.innerHTML='';
+  {const lb=document.createElement('span');lb.className='lb';lb.textContent='⏭ próximo a abastecer:';nx.append(lb);
+    if(prox){const b=document.createElement('b');b.textContent=prox;nx.append(avatar(prox),b)}else{const b=document.createElement('b');b.textContent='(lista vazia)';nx.append(b)}
+    const h=document.createElement('span');h.className='hint';h.textContent=S.level===0?'é agora!':'quando o pote esvaziar';nx.append(h)}
+  $('filled').textContent='✅ '+(prox||'?')+' reabasteceu';
   const ds=$('dots');ds.innerHTML='';
-  S.candy.forEach(p=>{const d=document.createElement('div');d.className='dot'+(S.done.includes(p)?' done':p===cur?' cur':'');d.textContent=p;ds.append(d)});
-  $('round').textContent='// rodada #'+S.round+' · '+S.done.length+'/'+S.candy.length+' já encheram';
+  S.candy.forEach(p=>{const d=document.createElement('div');d.className='dot'+(S.done.includes(p)?' done':p===prox?' cur':'');d.textContent=p;ds.append(d)});
+  $('round').textContent='// rodada #'+S.round+' · '+S.done.length+'/'+S.candy.length+' já abasteceram';
   const g=$('candies');g.innerHTML='';const cols=['#ff7b72','#ffa657','#d2a8ff','#79c0ff','#3fb950','#f778ba'];
   for(let i=0;i<Math.min(30,S.level*8);i++){const c=document.createElementNS('http://www.w3.org/2000/svg','circle');c.setAttribute('cx',26+(i%6)*10.5+(Math.floor(i/6)%2)*4);c.setAttribute('cy',112-Math.floor(i/6)*12);c.setAttribute('r',5);c.setAttribute('fill',cols[i%6]);c.style.animationDelay=(i*.13)+'s';g.append(c)}
   // logs
@@ -236,7 +263,9 @@ $('skip').onclick=()=>{S.offset++;save();render()};
 $('back').onclick=()=>{S.offset--;save();render()};
 $('eat').onclick=()=>{setLevel(Math.max(0,S.level-1));save();render()};
 $('empty').onclick=()=>{setLevel(0);save();render()};
-$('filled').onclick=()=>{const pend=S.candy.filter(p=>!S.done.includes(p)),who=pend[0]||S.candy[0];if(!who)return;S.log.push({n:who,d:fmt(new Date()),days:S.level===0&&S.emptyAt?diasVazio():null});S.log=S.log.slice(-30);S.done.push(who);setLevel(4);if(S.done.length>=S.candy.length){S.done=[];S.round++}save();render()};
+$('filled').onclick=()=>{const who=proximo();if(!who)return;S.log.push({n:who,d:fmt(new Date()),days:S.level===0&&S.emptyAt?diasVazio():null});S.log=S.log.slice(-30);S.done.push(who);setLevel(4);if(S.done.length>=S.candy.length){S.done=[];S.round++}save();render()};
+// sincroniza se o painel estiver aberto em outra aba do mesmo navegador
+addEventListener('storage',e=>{if(e.key!==KEY)return;try{const sv=JSON.parse(e.newValue||'null');if(sv){SAVED.forEach(k=>{if(sv[k]!==undefined)S[k]=sv[k]});render()}}catch(_){}});
 // botão editar do pote de balas
 const candyBtns=$('candyBtns'),editCandy=$('editCandy');
 editCandy.onclick=()=>{
